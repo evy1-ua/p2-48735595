@@ -5,7 +5,7 @@
 #include <iostream>
 #include <cstdlib> // Para rand(), srand() y atoi()
 #include <cctype> // Comprobar si es numero o digito
-
+#include <string.h>
 
 using namespace std;
 
@@ -27,6 +27,12 @@ enum Breed{
   HELLHOUND,
   DRAGON
 };
+enum Error{
+  ERR_NAME,
+  ERR_DISTRIBUTION,
+  ERR_OPTION,
+  ERR_SPECIAL,
+};
 
 struct Enemy{
   Breed name;
@@ -41,12 +47,7 @@ struct Hero{
   int exp;
   int kills[KENEMIES];
 };
-enum Error{
-  ERR_NAME,
-  ERR_DISTRIBUTION,
-  ERR_OPTION,
-  ERR_SPECIAL,
-};
+
 
 void error(Error e){
   switch(e){
@@ -68,28 +69,32 @@ void error(Error e){
 int rollDice(){
   return rand()%KDICE+1;
 }
-void DemandHero(){
-Hero hero;
+//Modulo de introducir el nombre del héroe//
+void Heroname(Hero& hero){
 int i=0;
 do{
   cout<<"Enter hero name: \n";
   fgets(hero.name,KNAME,stdin);
-  if(isalpha(hero.name[0])==0){
-    error(ERR_NAME); 
-  }
   while(hero.name[i]){
-    if(ispunct(hero.name[i])){
+    if(isalpha(hero.name[0])==0 || ispunct(hero.name[i])){
       error(ERR_NAME);
       break; 
     }
     else{
       i++;
-    } 
+    }
   }
 }while(isalpha(hero.name[0])==0 || ispunct(hero.name[i])!=0) ;
-
+}
+Hero createHero(){
+Hero hero;
+Heroname(hero);
+cout<<hero.name;
 }
 
+Enemy createEnemy(){
+
+}
 void fight(Hero &hero,Enemy &enemy){
 }
 
@@ -112,7 +117,7 @@ int main(int argc,char *argv[]){
   }
   else{
     srand(atoi(argv[1])); // Introducimos la semilla para generar números aleatorios
-    DemandHero();
+    createHero();
     // Aquí vendrá todo tu código del "main"...
     
   }
