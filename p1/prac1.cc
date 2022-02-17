@@ -49,6 +49,8 @@ struct Hero{
   int exp;
   int kills[KENEMIES];
 };
+void menu(Hero&,Enemy&);
+void report(const Hero& );
 //Función que recibe un enum y imprimirá por pantalla el error
 void error(Error e){
   switch(e){
@@ -100,7 +102,13 @@ do{
   hero.features.hp=0;
   hero.special=false;
   hero.exp=0;
-  hero.kills[KENEMIES]=0;
+  hero.runaways=3;
+  for (int i = 0; i < KENEMIES; i++)
+  {
+    hero.kills[i]=0;
+  }
+  
+  hero.kills[KENEMIES]={0};
 
     cout<<"Enter attack/defense: ";
     getline(cin,distribution);
@@ -161,6 +169,7 @@ void imprimirEnemigo(Enemy& enemy){
   cout<<"Defense: "<<enemy.features.defense<<endl;
   cout<<"Health points: "<<enemy.features.hp<<endl;
 }
+
 void elegirenemigo(int dado,Enemy& enemy){
   switch (dado)
   {
@@ -208,10 +217,102 @@ int dado=rollDice();
 elegirenemigo(dado,enemy);
 return enemy;
 }
+void Hero_turn(Hero &hero, Enemy& enemy){
+  int hero_turn=rollDice()*5;
+  int enemy_turn=rollDice()*5;
+  int attack=hero.features.attack+hero_turn;
+  int defense=enemy.features.defense+enemy_turn;
+  int hit_points=attack-defense;
+  if(hit_points<=0){
+    hit_points=0;
+  }
+  int enemy_health= enemy.features.hp-hit_points;
+cout<<"[Hero -> Enemy]" <<endl
+    <<"Attack: "<<hero.features.attack<<" + "<<hero_turn<<endl
+    <<"Defense: "<<enemy.features.defense<<" + "<<enemy_turn<<endl
+    <<"Hit points: "<<hit_points<<endl
+    <<"Enemy health points: "<<enemy_health<<endl;
+    enemy.features.hp=enemy_health;
+    
+}
+void Enemy_turn(Hero &hero, Enemy& enemy){
+  int enemy_turn=rollDice()*5;
+  int hero_turn=rollDice()*5;
+  
+  int attack=enemy.features.attack+enemy_turn;
+  int defense=hero.features.defense+hero_turn;
+  int hit_points=attack-defense;
+  if(hit_points<=0){
+    hit_points=0;
+  }
+  int hero_health= hero.features.hp-hit_points;
+cout<<"[Enemy -> Hero]" <<endl
+    <<"Attack: "<<enemy.features.attack<<" + "<<enemy_turn<<endl
+    <<"Defense: "<<hero.features.defense<<" + "<<hero_turn<<endl
+    <<"Hit points: "<<hit_points<<endl
+    <<"Hero health points: "<<hero_health<<endl;
+    hero.features.hp=hero_health;
+    
+}
+void add_exp(Hero& hero, Enemy enemy){
+  switch (enemy.name)
+  {
+  case AXOLOTL:
+    hero.exp=hero.exp+100;
+    hero.kills[0]+=1;
+    break;
+  case TROLL:
+    hero.exp=hero.exp+150;
+    hero.kills[1]+=1;
+    break;
+  case ORC:
+    hero.exp=hero.exp+200;
+    hero.kills[2]+=1;
+    break;
+  case HELLHOUND:
+    hero.exp=hero.exp+300;
+    hero.kills[3]+=1;
+  
+  default:
+    hero.exp=hero.exp+400;
+    hero.kills[4]+=1;
+  }
+}
+//TODO: error cuando nos matan
 void fight(Hero &hero,Enemy &enemy){
+    Hero_turn(hero,enemy);
+    if(enemy.features.hp==0){
+      cout<<"Enemy killed\n";
+      add_exp(hero,enemy);
+      enemy=createEnemy();
+      menu(hero,enemy);
+    }
+    else{
+      Enemy_turn(hero,enemy);
+      if(hero.features.hp==0){
+        cout<<"You are dead";
+        report(hero);
+      }
+    }
+  
 }
 
 void report(const Hero &hero){
+  cout<<"[Report]"<<endl
+      <<"Name: "<<hero.name
+      <<"Attack: "<<hero.features.attack<<endl
+      <<"Defense: "<<hero.features.defense<<endl
+      <<"Health points: "<<hero.features.hp<<endl
+      <<"Special: yes"<<endl
+      <<"Runaways: "<<hero.runaways<<endl
+      <<"Exp: "<<hero.exp<<endl
+      <<"Enemies killed:"<<endl
+      <<"- Axolotl: "<<hero.kills[0]<<endl
+      <<"- Troll: "<<hero.kills[1]<<endl
+      <<"- Orc: "<<hero.kills[2]<<endl
+      <<"- Hellhound: "<<hero.kills[3]<<endl
+      <<"- Dragon: "<<hero.kills[4]<<endl
+      <<"- Total: 0 "<<endl;
 }
 
 void showMenu(){
@@ -223,23 +324,15 @@ void showMenu(){
        << "q- Quit" << endl
        << "Option: ";
 }
-
-int main(int argc,char *argv[]){
-  if(argc!=2){ // Si los parámetros no son correctos, el programa termina inmediatamente
-    cout << "Usage: " << argv[0] << " <seed>" << endl;
-  }
-  else{
-    srand(atoi(argv[1])); // Introducimos la semilla para generar números aleatorios
-    createHero();
-    createEnemy();
-    char opc;
+void menu(Hero& hero, Enemy& enemy){
+char opc;
     do{
       showMenu();
       cin>>opc;
       switch (opc)
       {
       case '1':
-        cout<<"Fight";
+        fight(hero,enemy);
         break;
       case '2':
         cout<<"Run away";
@@ -248,7 +341,7 @@ int main(int argc,char *argv[]){
         cout<<"Special";
         break;
       case '4':
-        cout<<"Report";
+        report(hero);
         break;
       case 'q':
         break;
@@ -257,6 +350,18 @@ int main(int argc,char *argv[]){
         break;
       }
     }while(opc!='q');
+}
+int main(int argc,char *argv[]){
+  if(argc!=2){ // Si los parámetros no son correctos, el programa termina inmediatamente
+    cout << "Usage: " << argv[0] << " <seed>" << endl;
+  }
+  else{
+    Hero hero;
+    Enemy enemy;
+    srand(atoi(argv[1])); // Introducimos la semilla para generar números aleatorios
+    hero=createHero();
+    enemy=createEnemy();
+    menu(hero,enemy);
     
     // Aquí vendrá todo tu código del "main"...
     

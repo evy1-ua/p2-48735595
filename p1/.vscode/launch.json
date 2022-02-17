@@ -13,7 +13,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/prac1",
-            "args": [500],
+            "args": [7575],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
