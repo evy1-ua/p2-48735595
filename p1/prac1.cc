@@ -52,6 +52,25 @@ struct Hero{
 };
 void menu(Hero&,Enemy&,bool&,bool&);
 void report(const Hero& );
+void error(Error);
+int rollDice();
+void Heroname(Hero&);
+void Heropoints(Hero&);
+Hero createHero();
+void imprimirEnemigo();
+void elegirenemigo(int,Enemy&);
+Enemy createEnemy();
+void Hero_turn(Hero&,Enemy&,bool&);
+void Enemy_turn(Hero&,Enemy&);
+void add_exp(Hero&,Enemy);
+void fight(Hero&,Enemy&,bool&,bool&,bool&);
+void run_away(Hero&,Enemy&,bool&);
+void specialFight(Hero&,Enemy&,bool&,bool&);
+void report(const Hero&);
+void showMenu();
+void menu(Hero&,Enemy&,bool&,bool&);
+
+
 //Función que recibe un enum y imprimirá por pantalla el error
 void error(Error e){
   switch(e){
@@ -228,7 +247,6 @@ void Hero_turn(Hero &hero, Enemy& enemy,bool& special){
      hero_turn=rollDice()*5;
      enemy_turn=rollDice()*5;
   }
-  
   int attack=hero.features.attack+hero_turn;
   int defense=enemy.features.defense+enemy_turn;
   int hit_points=attack-defense;
@@ -236,15 +254,15 @@ void Hero_turn(Hero &hero, Enemy& enemy,bool& special){
     hit_points=0;
   }
   int enemy_health= enemy.features.hp-hit_points;
+  if(enemy_health<0){
+      enemy_health=0;
+    }
+    enemy.features.hp=enemy_health;
 cout<<"[Hero -> Enemy]" <<endl
     <<"Attack: "<<hero.features.attack<<" + "<<hero_turn<<endl
     <<"Defense: "<<enemy.features.defense<<" + "<<enemy_turn<<endl
     <<"Hit points: "<<hit_points<<endl
     <<"Enemy health points: "<<enemy_health<<endl;
-    enemy.features.hp=enemy_health;
-    if(enemy.features.hp<0){
-      enemy.features.hp=0;
-    }
     
 }
 void Enemy_turn(Hero &hero, Enemy& enemy){
@@ -258,14 +276,16 @@ void Enemy_turn(Hero &hero, Enemy& enemy){
     hit_points=0;
   }
   int hero_health= hero.features.hp-hit_points;
+    
+    if(hero_health<0){
+      hero_health=0;    }
+      hero.features.hp=hero_health;
 cout<<"[Enemy -> Hero]" <<endl
     <<"Attack: "<<enemy.features.attack<<" + "<<enemy_turn<<endl
     <<"Defense: "<<hero.features.defense<<" + "<<hero_turn<<endl
     <<"Hit points: "<<hit_points<<endl
     <<"Hero health points: "<<hero_health<<endl;
-    hero.features.hp=hero_health;
-    if(hero.features.hp<0){
-      hero.features.hp=0;    }
+  
 }
 void add_exp(Hero& hero, Enemy enemy){
   switch (enemy.name)
@@ -305,6 +325,7 @@ void fight(Hero &hero,Enemy &enemy,bool& runaway,bool& special){
       if(hero.features.hp==0){
         cout<<"You are dead";
         report(hero);
+        exit(0);
       }
     }
     runaway=true;
@@ -322,11 +343,17 @@ void run_away(Hero &hero, Enemy &enemy,bool& runaway){
   }
 }
 void specialFight(Hero& hero,Enemy& enemy,bool& runaway,bool& special){
-  special=true;
   if(hero.special==true){
-    fight(hero,enemy,runaway,special);
-    hero.special=false;
+    special=true;
+    if(hero.special==true){
+      fight(hero,enemy,runaway,special);
+      hero.special=false;
+    }
   }
+  else{
+    error(ERR_SPECIAL);
+  }
+  
   
 }
 void report(const Hero &hero){
