@@ -34,6 +34,7 @@ enum Error{
   ERR_DISTRIBUTION,
   ERR_OPTION,
   ERR_SPECIAL,
+  ERR_RUNAWAY,
 };
 
 struct Enemy{
@@ -49,7 +50,7 @@ struct Hero{
   int exp;
   int kills[KENEMIES];
 };
-void menu(Hero&,Enemy&);
+void menu(Hero&,Enemy&,bool&,bool&);
 void report(const Hero& );
 //Función que recibe un enum y imprimirá por pantalla el error
 void error(Error e){
@@ -64,8 +65,10 @@ void error(Error e){
       cout << "ERROR: wrong option" << endl;
       break;
     case ERR_SPECIAL:
-      cout << "ERROR: cannot run away" << endl;
+      cout << "ERROR: special not available" << endl;
       break;
+    case ERR_RUNAWAY:
+      cout<<"ERROR: cannot run away"<<endl;
   }
 }
 
@@ -100,7 +103,7 @@ do{
   hero.features.attack=0;
   hero.features.defense=0;
   hero.features.hp=0;
-  hero.special=false;
+  hero.special=true;
   hero.exp=0;
   hero.runaways=3;
   for (int i = 0; i < KENEMIES; i++)
@@ -169,7 +172,6 @@ void imprimirEnemigo(Enemy& enemy){
   cout<<"Defense: "<<enemy.features.defense<<endl;
   cout<<"Health points: "<<enemy.features.hp<<endl;
 }
-
 void elegirenemigo(int dado,Enemy& enemy){
   switch (dado)
   {
@@ -217,9 +219,16 @@ int dado=rollDice();
 elegirenemigo(dado,enemy);
 return enemy;
 }
-void Hero_turn(Hero &hero, Enemy& enemy){
-  int hero_turn=rollDice()*5;
-  int enemy_turn=rollDice()*5;
+void Hero_turn(Hero &hero, Enemy& enemy,bool& special){
+  int hero_turn=0,enemy_turn=0;
+  if(special==true){
+     hero_turn=rollDice()*5*3;
+     enemy_turn=rollDice()*5;
+  }else{
+     hero_turn=rollDice()*5;
+     enemy_turn=rollDice()*5;
+  }
+  
   int attack=hero.features.attack+hero_turn;
   int defense=enemy.features.defense+enemy_turn;
   int hit_points=attack-defense;
@@ -233,6 +242,9 @@ cout<<"[Hero -> Enemy]" <<endl
     <<"Hit points: "<<hit_points<<endl
     <<"Enemy health points: "<<enemy_health<<endl;
     enemy.features.hp=enemy_health;
+    if(enemy.features.hp<0){
+      enemy.features.hp=0;
+    }
     
 }
 void Enemy_turn(Hero &hero, Enemy& enemy){
@@ -252,7 +264,8 @@ cout<<"[Enemy -> Hero]" <<endl
     <<"Hit points: "<<hit_points<<endl
     <<"Hero health points: "<<hero_health<<endl;
     hero.features.hp=hero_health;
-    
+    if(hero.features.hp<0){
+      hero.features.hp=0;    }
 }
 void add_exp(Hero& hero, Enemy enemy){
   switch (enemy.name)
@@ -279,13 +292,13 @@ void add_exp(Hero& hero, Enemy enemy){
   }
 }
 //TODO: error cuando nos matan
-void fight(Hero &hero,Enemy &enemy){
-    Hero_turn(hero,enemy);
+void fight(Hero &hero,Enemy &enemy,bool& runaway,bool& special){
+    Hero_turn(hero,enemy,special);
     if(enemy.features.hp==0){
       cout<<"Enemy killed\n";
       add_exp(hero,enemy);
       enemy=createEnemy();
-      menu(hero,enemy);
+      menu(hero,enemy,runaway,special);
     }
     else{
       Enemy_turn(hero,enemy);
@@ -294,16 +307,46 @@ void fight(Hero &hero,Enemy &enemy){
         report(hero);
       }
     }
+    runaway=true;
+}
+void run_away(Hero &hero, Enemy &enemy,bool& runaway){
+  if(hero.runaways>0 && runaway==true){
+    hero.runaways--;
+    cout<<"You run away\n";
+    enemy=createEnemy();
+    
+    runaway=false;
+  }
+  else{
+    error(ERR_RUNAWAY);
+  }
+}
+void specialFight(Hero& hero,Enemy& enemy,bool& runaway,bool& special){
+  special=true;
+  if(hero.special==true){
+    fight(hero,enemy,runaway,special);
+    hero.special=false;
+  }
   
 }
-
 void report(const Hero &hero){
+  string special;
+  if(hero.special==true){
+    special="yes";
+  }
+  else{
+    special="no";
+  }
+  int total_enemies=0;
+  for(int i=0;i<=4;i++){
+    total_enemies+=hero.kills[i];
+  }
   cout<<"[Report]"<<endl
       <<"Name: "<<hero.name
       <<"Attack: "<<hero.features.attack<<endl
       <<"Defense: "<<hero.features.defense<<endl
       <<"Health points: "<<hero.features.hp<<endl
-      <<"Special: yes"<<endl
+      <<"Special: "<<special<<endl
       <<"Runaways: "<<hero.runaways<<endl
       <<"Exp: "<<hero.exp<<endl
       <<"Enemies killed:"<<endl
@@ -312,7 +355,7 @@ void report(const Hero &hero){
       <<"- Orc: "<<hero.kills[2]<<endl
       <<"- Hellhound: "<<hero.kills[3]<<endl
       <<"- Dragon: "<<hero.kills[4]<<endl
-      <<"- Total: 0 "<<endl;
+      <<"- Total: "<<total_enemies<<endl;
 }
 
 void showMenu(){
@@ -324,7 +367,7 @@ void showMenu(){
        << "q- Quit" << endl
        << "Option: ";
 }
-void menu(Hero& hero, Enemy& enemy){
+void menu(Hero& hero, Enemy& enemy,bool& runaway, bool& special){
 char opc;
     do{
       showMenu();
@@ -332,13 +375,13 @@ char opc;
       switch (opc)
       {
       case '1':
-        fight(hero,enemy);
+        fight(hero,enemy,runaway,special);
         break;
       case '2':
-        cout<<"Run away";
+        run_away(hero,enemy,runaway);
         break;
       case '3':
-        cout<<"Special";
+        specialFight(hero,enemy,runaway,special);
         break;
       case '4':
         report(hero);
@@ -358,10 +401,11 @@ int main(int argc,char *argv[]){
   else{
     Hero hero;
     Enemy enemy;
+    bool  runaway=true,special=false;
     srand(atoi(argv[1])); // Introducimos la semilla para generar números aleatorios
     hero=createHero();
     enemy=createEnemy();
-    menu(hero,enemy);
+    menu(hero,enemy,runaway,special);
     
     // Aquí vendrá todo tu código del "main"...
     
