@@ -66,9 +66,8 @@ void add_exp(Hero&,Enemy);
 void fight(Hero&,Enemy&,bool&,bool&,bool&);
 void run_away(Hero&,Enemy&,bool&);
 void specialFight(Hero&,Enemy&,bool&,bool&);
-void report(const Hero&);
 void showMenu();
-void menu(Hero&,Enemy&,bool&,bool&);
+
 
 
 //Función que recibe un enum y imprimirá por pantalla el error
@@ -166,7 +165,7 @@ Heropoints(hero);
 return hero;
 }
 void imprimirEnemigo(Enemy& enemy){
-  string enemy_name;
+  string enemy_name="";
   switch (enemy.name)
   {
   case  0 :
@@ -318,7 +317,6 @@ void fight(Hero &hero,Enemy &enemy,bool& runaway,bool& special){
       cout<<"Enemy killed\n";
       add_exp(hero,enemy);
       enemy=createEnemy();
-      menu(hero,enemy,runaway,special);
     }
     else{
       Enemy_turn(hero,enemy);
@@ -329,6 +327,7 @@ void fight(Hero &hero,Enemy &enemy,bool& runaway,bool& special){
       }
     }
     runaway=true;
+    special=false;
 }
 void run_away(Hero &hero, Enemy &enemy,bool& runaway){
   if(hero.runaways>0 && runaway==true){
@@ -345,10 +344,9 @@ void run_away(Hero &hero, Enemy &enemy,bool& runaway){
 void specialFight(Hero& hero,Enemy& enemy,bool& runaway,bool& special){
   if(hero.special==true){
     special=true;
-    if(hero.special==true){
-      fight(hero,enemy,runaway,special);
-      hero.special=false;
-    }
+    fight(hero,enemy,runaway,special);
+    hero.special=false;
+    
   }
   else{
     error(ERR_SPECIAL);
@@ -357,7 +355,7 @@ void specialFight(Hero& hero,Enemy& enemy,bool& runaway,bool& special){
   
 }
 void report(const Hero &hero){
-  string special;
+  string special="";
   if(hero.special==true){
     special="yes";
   }
@@ -395,7 +393,7 @@ void showMenu(){
        << "Option: ";
 }
 void menu(Hero& hero, Enemy& enemy,bool& runaway, bool& special){
-char opc;
+char opc='0';
     do{
       showMenu();
       cin>>opc;
