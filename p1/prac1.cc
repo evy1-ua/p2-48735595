@@ -15,21 +15,21 @@ const int KENEMIES=5; //Número de razas de enemigos diferentes
 const int KPOINTS=200; //Número de puntos de habilidad a repartir
 const int KDICE=20; // Número de caras del dado
 
-struct Core{
-  int attack;
-  int defense;
-  int hp;
+struct Core{//EStadísticas
+  int attack; //ataque
+  int defense;  //defensa
+  int hp; //Puntos de vida
 };
 
-enum Breed{
+enum Breed{//Enumeración de enemigos
   AXOLOTL,
   TROLL,
   ORC,
   HELLHOUND,
   DRAGON
 };
-//Enumeramos los errores
-enum Error{
+
+enum Error{//Enumeramos los errores
   ERR_NAME,
   ERR_DISTRIBUTION,
   ERR_OPTION,
@@ -37,19 +37,20 @@ enum Error{
   ERR_RUNAWAY,
 };
 
-struct Enemy{
-  Breed name;
-  Core features;
+struct Enemy{ //Estrucura de enemigo
+  Breed name;  //Nombre del enemigo
+  Core features;  //Estadísticas del enemigo
 };
 
-struct Hero{
-  char name[KNAME];
-  Core features;
-  bool special;
-  int runaways;
-  int exp;
-  int kills[KENEMIES];
+struct Hero{  //Estructura de héroe
+  char name[KNAME]; //Nombre del héroe
+  Core features;  //Estadísticas del héroe
+  bool special; //Habilidad especial del héroe
+  int runaways; //Número de veces que puede escapar
+  int exp;  //Puntos de experiencia
+  int kills[KENEMIES];  //Numero de kills por enemigo
 };
+//DECLARACIÓN DE FUNCIONES
 void menu(Hero&,Enemy&,bool&,bool&);
 void report(const Hero& );
 void error(Error);
@@ -68,9 +69,10 @@ void run_away(Hero&,Enemy&,bool&);
 void specialFight(Hero&,Enemy&,bool&,bool&);
 void showMenu();
 
-
-
-//Función que recibe un enum y imprimirá por pantalla el error
+/*Función imprime por pantalla un error
+  *PARÁMETROS: enum con el tipo de error
+  *RETORNO: imprime por pantalla el error
+*/
 void error(Error e){
   switch(e){
     case ERR_NAME:
@@ -89,20 +91,23 @@ void error(Error e){
       cout<<"ERROR: cannot run away"<<endl;
   }
 }
-
+//Función que genera aleatoriamente un numero
 int rollDice(){
   return rand()%KDICE+1;
 }
-//Modulo de introducir el nombre del héroe, recibirá un parámetro de heroe
+/*Función que obtiene el nombre del héroe y comprueba si es correcto
+  *PARÁMETROS: Un héroe en el que modificaremos su nombre (paso por referencia)
+  *RETORNO: Nombre del héroe correcto
+*/
 void Heroname(Hero& hero){
 int i=0;
 do{
   cout<<"Enter hero name: ";
-  fgets(hero.name,KNAME,stdin);
+  fgets(hero.name,KNAME,stdin); //Cuando leemos el nombre su tamaño será de 32 rellenando las posiciones resultantes
   while(hero.name[i]){
     if(isalpha(hero.name[0])==0 || ispunct(hero.name[i])){
       error(ERR_NAME);
-      break; 
+      break;
     }
     else{
       i++;
@@ -110,12 +115,16 @@ do{
   }
 }while(isalpha(hero.name[0])==0 || ispunct(hero.name[i])!=0) ;
 }
+/*Función que obtiene los puntos del héroe que añadiremos en un string
+  *PARÁMETROS: UN Héroe en el que modificaremos un features (paso por referencia)
+  *RETORNO: Distribución correcta de los puntos de combate así como la vida del héroe
+*/
 void Heropoints(Hero& hero){
 unsigned int total,pos=0;
 float attack_distr,defense_distr;
 do{
   string aux="",distribution="";
-  unsigned int i=0;
+  unsigned int i=0; //Inicializamos todos los valores del héroe por defecto
   attack_distr=0;
   defense_distr=0;
   hero.features.attack=0;
@@ -128,19 +137,18 @@ do{
   {
     hero.kills[i]=0;
   }
-  
   hero.kills[KENEMIES]={0};
 
     cout<<"Enter attack/defense: ";
     getline(cin,distribution);
       pos=distribution.find("/");
-      if(pos>=0){
+      if(pos>=0 && pos<KNAME){
         for( i=0;i<pos;i++){
         aux+=distribution[i];
       }
         attack_distr=(atoi(aux.c_str()));
         hero.features.attack=KPOINTS*(attack_distr/100);
-        aux="";
+        aux="";//LImpiamos el auxiliar ya que lo vamos a volver a usar
        for( i=pos+1;i<distribution.length();i++){
           aux+=distribution[i];
        }
@@ -156,14 +164,22 @@ do{
       else{
         error(ERR_DISTRIBUTION);
       }
-    }while(pos<0 || attack_distr<0 || defense_distr<0 || total!=100 );
+}while( attack_distr<0 || defense_distr<0 || total!=100 );
 }
+/*Función que crea un héroe con todos los valores que ha añadido el usuario correctamente
+  *PARÁMETROS: Ninguno
+  *RETORNO: Héroe con datos correctos
+*/
 Hero createHero(){
 Hero hero;
 Heroname(hero);
 Heropoints(hero);
 return hero;
 }
+/*Función que imprime los datos de un enemigo
+  *PARÁMETROS: Enemigo actual que queremos imprimir por pantalla
+  *RETORNO: Datos del enemigo
+*/
 void imprimirEnemigo(Enemy& enemy){
   string enemy_name="";
   switch (enemy.name)
@@ -190,6 +206,10 @@ void imprimirEnemigo(Enemy& enemy){
   cout<<"Defense: "<<enemy.features.defense<<endl;
   cout<<"Health points: "<<enemy.features.hp<<endl;
 }
+/*Función que elige un enemigo según el número de un dado
+  *PARÁMETROS: un número de dado y el propio enemigo que será modificado por el anterior (paso por referecia)
+  *RETORNO: Un nuevo enemigo
+*/
 void elegirenemigo(int dado,Enemy& enemy){
   switch (dado)
   {
@@ -229,14 +249,21 @@ void elegirenemigo(int dado,Enemy& enemy){
     imprimirEnemigo(enemy);
     break;
   }
-  
 }
+/*Función que crea un enemigo con todos los valores obtenidos por un dado aleatoriamente
+  *PARÁMETROS: Ninguno
+  *RETORNO: Enemigo
+*/
 Enemy createEnemy(){
 Enemy enemy;
 int dado=rollDice();
 elegirenemigo(dado,enemy);
 return enemy;
 }
+/*Función que simula el primer turno donde el héroe ataca primero
+  *PARÁMETROS: Héroe actual,Enemigo actual, booleano que indica si hemos activado el ataque especial
+  *RETORNO: Ataque de nuestro héroe para matar al enemigo
+*/
 void Hero_turn(Hero &hero, Enemy& enemy,bool& special){
   int hero_turn=0,enemy_turn=0;
   if(special==true){
@@ -264,10 +291,13 @@ cout<<"[Hero -> Enemy]" <<endl
     <<"Enemy health points: "<<enemy_health<<endl;
     
 }
+/*Función que simula el segundo turno donde el enemigo ataca al héroe
+  *PARÁMETROS: Héroe actual,Enemigo actual
+  *RETORNO: Ataque de el enemigo para matar al héroe
+*/
 void Enemy_turn(Hero &hero, Enemy& enemy){
   int enemy_turn=rollDice()*5;
   int hero_turn=rollDice()*5;
-  
   int attack=enemy.features.attack+enemy_turn;
   int defense=hero.features.defense+hero_turn;
   int hit_points=attack-defense;
@@ -275,7 +305,6 @@ void Enemy_turn(Hero &hero, Enemy& enemy){
     hit_points=0;
   }
   int hero_health= hero.features.hp-hit_points;
-    
     if(hero_health<0){
       hero_health=0;    }
       hero.features.hp=hero_health;
@@ -284,8 +313,11 @@ cout<<"[Enemy -> Hero]" <<endl
     <<"Defense: "<<hero.features.defense<<" + "<<hero_turn<<endl
     <<"Hit points: "<<hit_points<<endl
     <<"Hero health points: "<<hero_health<<endl;
-  
 }
+/*Función que añade experiencia al héroe dependiendo del enemigo que ha matado
+  *PARÁMETROS: El héroe que modificaremos su experiencia(paso por referencia) y el enemigo que necesitaremos su nombre(paso por valor) para saber cuantos puntos añadiremos
+  *RETORNO: Puntos de experiencia correspondientes para el héroe
+*/
 void add_exp(Hero& hero, Enemy enemy){
   switch (enemy.name)
   {
@@ -304,13 +336,15 @@ void add_exp(Hero& hero, Enemy enemy){
   case HELLHOUND:
     hero.exp=hero.exp+300;
     hero.kills[3]+=1;
-  
   default:
     hero.exp=hero.exp+400;
     hero.kills[4]+=1;
   }
 }
-//TODO: error cuando nos matan
+/*Función que simula la batalla entre el héroe y enemigo
+  *PARÁMETROS: El héroe , el enemigo actual, un booleano para indicar si podemos huir y otro si podemos usar el ataque especial
+  *RETORNO: Imprime por pantalla la batalla
+*/
 void fight(Hero &hero,Enemy &enemy,bool& runaway,bool& special){
     Hero_turn(hero,enemy,special);
     if(enemy.features.hp==0){
@@ -329,31 +363,39 @@ void fight(Hero &hero,Enemy &enemy,bool& runaway,bool& special){
     runaway=true;
     special=false;
 }
+/*Función que nos permite huir del enemigo y cambiarlo
+  *PARÁMETRO: El héroe, nuestro enemigo que queremos huir,y booleano que nos indica si podemos huir
+  *RETORNO: Imprime por pantalla otro nuevo enemigo modificandolo
+*/
 void run_away(Hero &hero, Enemy &enemy,bool& runaway){
   if(hero.runaways>0 && runaway==true){
     hero.runaways--;
     cout<<"You run away\n";
     enemy=createEnemy();
-    
     runaway=false;
   }
   else{
     error(ERR_RUNAWAY);
   }
 }
+/*Función que nos permite usar el ataque especial de nuestro héroe
+  *PARÁMETRO: El héroe, nuestro enemigo que queremos huir,y booleano que nos indica si hemos huido anteriormente y otro si ya hemos utilizado el ataque especial
+  *RETORNO: Imprime por pantalla la batalla contra un enemigo pero usando el ataque especial
+*/
 void specialFight(Hero& hero,Enemy& enemy,bool& runaway,bool& special){
   if(hero.special==true){
     special=true;
     fight(hero,enemy,runaway,special);
     hero.special=false;
-    
   }
   else{
     error(ERR_SPECIAL);
   }
-  
-  
 }
+/*Función que imprime por pantalla nuestros ddatos y estadísticas
+  *PARÁMETROS: El héroe
+  *RETORNO: Datos y estadísticas del jugador
+*/
 void report(const Hero &hero){
   string special="";
   if(hero.special==true){
@@ -382,16 +424,23 @@ void report(const Hero &hero){
       <<"- Dragon: "<<hero.kills[4]<<endl
       <<"- Total: "<<total_enemies<<endl;
 }
-
+/*Función qu muestra el menú
+  *PARÁMETROS: Ninguno
+  *RETORNO: Imprime por pantalla el menú
+*/
 void showMenu(){
   cout << "[Options]" << endl
        << "1- Fight" << endl
        << "2- Run away" << endl
-       << "3- Special" << endl 
+       << "3- Special" << endl
        << "4- Report" << endl
        << "q- Quit" << endl
        << "Option: ";
 }
+/*Función que comprueba que el menú está siendo utilizado correctamente
+  *PARÁMETROS: El héroe, el enemigo, un booleano para conocer si podemos huir y otro si podemos usar el ataque especial
+  *RETORNO: Uso correcto de nuestro menú
+*/
 void menu(Hero& hero, Enemy& enemy,bool& runaway, bool& special){
 char opc='0';
     do{
@@ -431,8 +480,5 @@ int main(int argc,char *argv[]){
     hero=createHero();
     enemy=createEnemy();
     menu(hero,enemy,runaway,special);
-    
-    // Aquí vendrá todo tu código del "main"...
-    
   }
 }
