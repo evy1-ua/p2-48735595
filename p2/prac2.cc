@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <vector>
+#include <cctype> 
 
 using namespace std;
 
@@ -90,12 +91,44 @@ void showMainMenu() {
 }
 
 void showCatalog(const BookStore &bookStore) {
+    
+    cout<<bookStore.name;
 }
 
 void showExtendedCatalog(const BookStore &bookStore) {
 }
+string checkTitle(){
+  string title;
+  bool correcto=true;
+  do{
+    correcto=true;
+    title="";
+    cout<<"Enter book title: \n";
+    getline(cin,title);
+    for(int i=0;i<title.length();i++){
+      char letra=title[i];
+      int s=isalpha(letra);
+      int j=isspace(letra);
+      if(isalnum(letra)==0 && isspace(letra)==0 && letra!=':' && letra!=',' && letra!='-'){
+        error(ERR_BOOK_TITLE);
+        correcto=false;
+      }
+    }
+   
+  }while(correcto==false);
+   return title;
 
+
+}
+Book demandBook(BookStore &bookStore){
+  Book book;
+  book.id=bookStore.nextId;
+  book.title=checkTitle();
+  return book;
+
+}
 void addBook(BookStore &bookStore) {
+bookStore.books[0]=demandBook(bookStore);
 }
 
 void deleteBook(BookStore &bookStore) {
