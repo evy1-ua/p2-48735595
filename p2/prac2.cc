@@ -1,5 +1,5 @@
 // Programación 2 - Práctica 2
-// DNI: 48735595k
+// DNI: 48735595K
 // Nombre: Eric Vivancos Yagües
 
 #include <iostream>
