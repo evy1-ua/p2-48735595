@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${fileDirname}/${fileBasenameNoExtension}",
-            "args": [],
+            "args": ["-i","fileImportFromCSV.csv","-l","prueba.bin"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],
