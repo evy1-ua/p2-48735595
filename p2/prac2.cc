@@ -10,8 +10,10 @@
 
 using namespace std;
 
-const int KMAXSTRING = 50;
+//DECLARACIÓN DE CONSTANTES
+const int KMAXSTRING = 50;  //Máximo de carácteres en los archivos binarios
 
+//Enumeración que nos indica el tipo de errores
 enum Error {
   ERR_OPTION,
   ERR_BOOK_TITLE,
@@ -23,6 +25,7 @@ enum Error {
   ERR_ARGS
 };
 
+//Enumeración que nos indica el tipo de peticiones del usuario
 enum Request {
   BOOK_TITLE_REQUEST,
   BOOK_AUTHORS_REQUEST,
@@ -32,35 +35,41 @@ enum Request {
   FILENAME_REQUEST,
   ERASE_REQUEST
 };
+//EStructura básica de un libro
 struct Book {
-  unsigned int id;
-  string title;
-  string authors;
-  int year;
-  string slug;
-  float price;
+  unsigned int id;  //id del libro
+  string title; //titulo del libro
+  string authors; //autor/es del libro
+  int year; //año de publicación del libro
+  string slug;  //slug del libro(implemetación web)
+  float price;  //precio del libro
 };
 
+//Estructura Binaria de un libro
 struct BinBook {
-  unsigned int id;
-  char title[KMAXSTRING];
-  char authors[KMAXSTRING];
-  int year;
-  char slug[KMAXSTRING];
-  float price;
+  unsigned int id;  //id binario del libro
+  char title[KMAXSTRING]; //titulo en biario del libro
+  char authors[KMAXSTRING]; //autor/es en binario del libro
+  int year; //año en binario
+  char slug[KMAXSTRING];  //slug en binario
+  float price;  //precio en binario
 };
-
+//Estructura básica de una tienda de libros
 struct BookStore {
-  string name;
-  vector<Book> books;
-  unsigned int nextId;
+  string name;  //Nombre de la tienda
+  vector<Book> books; //vector de libros que contiene la tienda
+  unsigned int nextId;  //id del siguiente libro de la tienda
 };
-
+//Estructura binaria de una tienda de libros
 struct BinBookStore {
-  char name[KMAXSTRING];
-  unsigned int nextId;
+  char name[KMAXSTRING];  //nombre en binario de la tienda
+  unsigned int nextId;  //id del siguiente libro en la tienda
 };
 
+/*Función que imprime y pide una petición al usuario
+  *PARÁMETROS: enum con el tipo de petición
+  *RETORNO: la respuesta de la petición
+*/
 string userRequest(Request r) {
   string request;
   switch(r) {
@@ -96,6 +105,10 @@ string userRequest(Request r) {
   return request;
 }
 
+/*Función imprime por pantalla un error
+  *PARÁMETROS: enum con el tipo de error
+  *RETORNO: imprime por pantalla el error
+*/
 void error(Error e) {
   switch (e) {
     case ERR_OPTION:
@@ -125,6 +138,10 @@ void error(Error e) {
   }
 }
 
+/*Función qu muestra el menú principal
+  *PARÁMETROS: Ninguno
+  *RETORNO: Imprime por pantalla el menú
+*/
 void showMainMenu() {
   cout << "[Options]" << endl
        << "1- Show catalog" << endl
@@ -135,6 +152,10 @@ void showMainMenu() {
        << "q- Quit" << endl
        << "Option: ";
 }
+/*Función qu muestra el menú de importar/exportar
+  *PARÁMETROS: Ninguno
+  *RETORNO: Imprime por pantalla el menú
+*/
 void showImportMenu() {
   cout << "[Import/export options]" << endl
        << "1- Import from CSV" << endl
@@ -144,12 +165,22 @@ void showImportMenu() {
        << "b- Back to main menu" << endl
        << "Option: ";
 }
+
+/*Función que muestra el catálogo con datos reducidos
+  *PARÁMETROS: la estructura de la tienda para acceder a sus libros
+  *RETORNO: Impresión por pantalla de los libros
+*/
 void showCatalog(const BookStore &bookStore) {
     for(unsigned int i=0;i<bookStore.books.size();i++){
       cout<<bookStore.books[i].id<<". "<<bookStore.books[i].title
       <<" ("<<bookStore.books[i].year<<"), "<<bookStore.books[i].price<<endl;
     }
 }
+
+/*Función que muestra el catálogo con datos extendidos
+  *PARÁMETROS: la estructura de la tienda para acceder a sus libros
+  *RETORNO: Impresión por pantalla de los libros
+*/
 void showExtendedCatalog(const BookStore &bookStore) {
   for(unsigned int i=0;i<bookStore.books.size();i++){
     cout<<"\""<<bookStore.books[i].title<<"\",\""
@@ -159,6 +190,12 @@ void showExtendedCatalog(const BookStore &bookStore) {
         <<bookStore.books[i].price<<endl;
   }
 }
+
+/*Función que comprueba que son correctos tanto los titulos cómo los autores
+  *PARÁMETROS: el string a comprobar y un booleano de si es correcto
+  *RETORNO: el booleano de si es correcto;
+  *ANOTACIÓN: Hemos separado esta función y correct Title y correct authors ya que al importar un archivo también debemos comprobarlo
+*/
 bool checkCorrect(string title,bool correct){
   if(title.length()==0){
         error(ERR_BOOK_TITLE);
@@ -172,11 +209,15 @@ bool checkCorrect(string title,bool correct){
          correct=false;
          return correct;
        }
-       
     }
     }return correct;
 
 }
+/*Función intermediaria que nos devuelve el titulo correcto que hemos comprobado en checkCorrect
+  *PARÁMETROS: Ninguno;
+  *RETORNO: titulo correcto
+  *ANOTACIÓN: como debemos comprobar tambien al importar en CSV (otra opción) he creado esta función para que en esta sea pedida por el usuario y al importar sea automaticamente lo leido por el archivo
+*/
 string correctTitle(){
   string title;
   bool correct=true;
@@ -188,7 +229,11 @@ string correctTitle(){
   }while(correct==false);
    return title;
 
-
+/*Función intermediaria que nos devuelve los autores correctos que hemos comprobado en checkCorrect
+  *PARÁMETROS: Ninguno;
+  *RETORNO: titulo correcto
+  *ANOTACIÓN: como debemos comprobar tambien al importar en CSV (otra opción) he creado esta función para que en esta sea pedida por el usuario y al importar sea automaticamente lo leido por el archivo
+*/
 }
 string checkAuthors(){
   string authors;
@@ -293,13 +338,10 @@ void deleteBook(BookStore &bookStore) {
       bookStore.books.erase(bookStore.books.begin()+(stoi(id)-1));
       find=true;
     }
-    
   }
   if(find==false){
     error(ERR_ID);
-    
   }
-  
 }
 void load_CSV(string namefile,bool correct,BookStore &bookStore){
 fstream fichero(namefile,ios::in);
