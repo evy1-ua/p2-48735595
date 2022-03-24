@@ -145,13 +145,13 @@ void showImportMenu() {
        << "Option: ";
 }
 void showCatalog(const BookStore &bookStore) {
-    for(int i=0;i<bookStore.books.size();i++){
+    for(unsigned int i=0;i<bookStore.books.size();i++){
       cout<<bookStore.books[i].id<<". "<<bookStore.books[i].title
       <<" ("<<bookStore.books[i].year<<"), "<<bookStore.books[i].price<<endl;
     }
 }
 void showExtendedCatalog(const BookStore &bookStore) {
-  for(int i=0;i<bookStore.books.size();i++){
+  for(unsigned int i=0;i<bookStore.books.size();i++){
     cout<<"\""<<bookStore.books[i].title<<"\",\""
         <<bookStore.books[i].authors<<"\","
         <<bookStore.books[i].year<<",\""
@@ -165,7 +165,7 @@ bool checkCorrect(string title,bool correct){
         correct=false;
         return correct;
     }else{
-      for(int i=0;i<title.length();i++){
+      for(unsigned int i=0;i<title.length();i++){
        char letra=title[i];
        if(isalnum(letra)==0 && isspace(letra)==0 && letra!=':' && letra!=',' && letra!='-'){
          error(ERR_BOOK_TITLE);
@@ -217,9 +217,7 @@ string checkYear(){
 }
 string createSlug(string title){
   string slug;
-  char letra;
-  char letra2;
-  for(int i=0;i<title.length();i++){
+  for(unsigned int i=0;i<title.length();i++){
 
     if(slug.length()>0){
       if((isspace(title[i])!=0 || ispunct(title[i]!=0)) && slug[i-1]!='-' && title[i]!='-')
@@ -256,9 +254,8 @@ string checkprice(){
         error(ERR_BOOK_PRICE);
         correcto=false;
     }else{
-      for(int i=0;i<price.length();i++){
+      for(unsigned int i=0;i<price.length();i++){
         char letra=price[i];
-        int s = isalpha(price[i]);
         if(isdigit(letra)==0 && letra!='.'){
           error(ERR_BOOK_PRICE);
           correcto=false;
@@ -291,8 +288,8 @@ void deleteBook(BookStore &bookStore) {
   string id;
   id=userRequest(BOOK_ID_REQUEST);
   bool find=false;
-  for(int i=0;i<bookStore.books.size();i++){
-    if(bookStore.books[i].id==stoi(id) && id.size()>0){
+  for(unsigned int i=0;i<bookStore.books.size();i++){
+    if(bookStore.books[i].id==(unsigned)stoi(id) && id.size()>0){
       bookStore.books.erase(bookStore.books.begin()+(stoi(id)-1));
       find=true;
     }
@@ -340,7 +337,7 @@ Book book;
 
 void importFromCsv(BookStore &bookStore){
   string namefile;
-  bool correct=true;;
+  bool correct=true;
   namefile=userRequest(FILENAME_REQUEST);
   load_CSV(namefile,correct,bookStore);
   
@@ -352,7 +349,7 @@ void exportToCsv(const BookStore &bookStore){
   fstream fichero(namefile,ios::out);
   if(fichero.is_open()){
 
-    for(int i=0;i<bookStore.books.size();i++){
+    for(unsigned int i=0;i<bookStore.books.size();i++){
       fichero<<"\""<<bookStore.books[i].title<<"\",\""
       <<bookStore.books[i].authors<<"\","
       <<bookStore.books[i].year<<",\""
@@ -387,7 +384,6 @@ void loadBin(string namefile,BookStore &bookStore){
       fichero.read((char *) &bookbin, sizeof(bookbin));
       while(!fichero.eof()){
         bookStore.books.push_back(binarytoBook(bookbin));
-        bookStore.nextId++;
          fichero.read((char *) &bookbin, sizeof(bookbin));
       }
 
@@ -450,7 +446,6 @@ void writeBook(const BookStore &bookStore,ofstream &fichero){
 }
 void saveData(const BookStore &bookStore){
   ofstream fichero;
-  BinBook binbook;
   string namefile=userRequest(FILENAME_REQUEST);
   fichero.open(namefile,ios::out|ios::binary);
   if(fichero.is_open()){
@@ -496,10 +491,11 @@ void importExportMenu(BookStore &bookStore) {
   
 }
 void checkArguments(int argc,char *argv[],BookStore &bookStore){
-  bool correct;
+  bool correct=true;
   Book book;
   if(argc % 2 ==0 || argc>5){
     error(ERR_ARGS);
+    exit(0);
   }else if(argc==3){
     if(strcmp(argv[1],"-i")==0){
       load_CSV(argv[2],correct,bookStore);
@@ -509,28 +505,24 @@ void checkArguments(int argc,char *argv[],BookStore &bookStore){
     }
     else{
       error(ERR_ARGS);
+      exit(0);
     }
   }
   else if(argc==5){
-    if(strcmp(argv[1],"-i")==0){
-      if(strcmp(argv[3],"-l")){
-        cout<<argv[4];
+    if(strcmp(argv[1],"-i")==0 && strcmp(argv[3],"-l")==0){
         loadBin(argv[4],bookStore);
-        // load_CSV(argv[2],correct,bookStore);
-        cout<<"hola";
+        load_CSV(argv[2],correct,bookStore);
       }
-      
-    }
-    else if(strcmp(argv[1],"-l")==0 && strcmp(argv[3],"-i")){
+      else if(strcmp(argv[1],"-l")==0 && strcmp(argv[3],"-i")==0){
       loadBin(argv[2],bookStore);
-      load_CSV(argv[4],correct,bookStore);
     }
-    else{
-      cout<<argv[1]<<":"<<argv[3];
-      error(ERR_ARGS);
-    }
+      else {
+        error(ERR_ARGS);
+        exit(0);
+      }
   }
   
+
 }
 
 int main(int argc, char *argv[]) {
