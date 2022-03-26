@@ -44,7 +44,6 @@ struct Book {
   string slug;  //slug del libro(implemetación web)
   float price;  //precio del libro
 };
-
 //Estructura Binaria de un libro
 struct BinBook {
   unsigned int id;  //id binario del libro
@@ -165,7 +164,6 @@ void showImportMenu() {
        << "b- Back to main menu" << endl
        << "Option: ";
 }
-
 /*Función que muestra el catálogo con datos reducidos
   *PARÁMETROS: la estructura de la tienda para acceder a sus libros
   *RETORNO: Impresión por pantalla de los libros
@@ -176,7 +174,6 @@ void showCatalog(const BookStore &bookStore) {
       <<" ("<<bookStore.books[i].year<<"), "<<bookStore.books[i].price<<endl;
     }
 }
-
 /*Función que muestra el catálogo con datos extendidos
   *PARÁMETROS: la estructura de la tienda para acceder a sus libros
   *RETORNO: Impresión por pantalla de los libros
@@ -190,7 +187,6 @@ void showExtendedCatalog(const BookStore &bookStore) {
         <<bookStore.books[i].price<<endl;
   }
 }
-
 /*Función que comprueba que son correctos tanto los titulos cómo los autores
   *PARÁMETROS: el string a comprobar y un booleano de si es correcto
   *RETORNO: el booleano de si es correcto;
@@ -229,12 +225,13 @@ string correctTitle(){
   }while(correct==false);
    return title;
 
+
+}
 /*Función intermediaria que nos devuelve los autores correctos que hemos comprobado en checkCorrect
   *PARÁMETROS: Ninguno;
   *RETORNO: titulo correcto
   *ANOTACIÓN: como debemos comprobar tambien al importar en CSV (otra opción) he creado esta función para que en esta sea pedida por el usuario y al importar sea automaticamente lo leido por el archivo
 */
-}
 string checkAuthors(){
   string authors;
   bool correct=true;
@@ -246,48 +243,55 @@ string checkAuthors(){
   }while(correct==false);
   return authors;
 }
+/*Función que comprueba si el año de lanzamiento del libro es correcto
+  *PARÁMETROS:Ninguno
+  *RETORNO: año de lanzamiento correcto
+*/
 string checkYear(){
   string year;
-  bool correcto=true;
+  bool correct=true;
   do{
-    correcto=true;
+    correct=true;
     year="";
     year=userRequest(BOOK_YEAR_REQUEST);
-    if(stoi(year)<1440 || stoi(year)>2022){
+    if(year.size()==0){
       error(ERR_BOOK_DATE);
-      correcto=false;
+      correct=false;
     }
-  }while(correcto==false);
+    else if(stoi(year)<1440 || stoi(year)>2022 || year==""){
+      error(ERR_BOOK_DATE);
+      correct=false;
+    }
+  }while(correct==false);
   return year;
 }
+/*Función que crea un slug a partir del titulo
+  *PARÁMETROS: el titulo del autor
+  *RETORNO:el slug correcto
+*/
 string createSlug(string title){
   string slug;
+  bool Hyphen=true;
   for(unsigned int i=0;i<title.length();i++){
-
-    if(slug.length()>0){
-      if((isspace(title[i])!=0 || ispunct(title[i]!=0)) && slug[i-1]!='-' && title[i]!='-')
-        slug.push_back('-');
-        else if(isalnum(title[i])!=0){
-          slug.push_back(tolower(title[i]));
-        }
-    }
-    else if(isalnum(title[i])!=0)
-    {
+    if(isalnum(title[i])!=0){
       slug.push_back(tolower(title[i]));
+      Hyphen=false;
     }
-    //  if (isspace(title[i]) || ispunct(title[i])){
-    //    if(slug[i-1]!='-' && ispunct(title[i])==0 && slug[0]!='-'){
-    //      slug.push_back('-');
-    //    }
-    // }else if(isalnum(title[i])!=0){
-    //   slug.push_back(tolower(title[i]));
-    // }
-    // else{
-    //   slug.push_back(title[i]);
-    // }
+    else if(isspace(title[i]) && !Hyphen){
+      slug.push_back('-');
+      Hyphen=true;
+    }
+  }
+  if(Hyphen && title.size()>0){ //Evitamos los guiones finales
+    slug.pop_back();
   }
   return slug;
 }
+/*Función que comprueba que  el precio es correcto
+  *PARÁMETROS: Ninguno
+  *RETORNO: el precio correcto
+  *ANOTACIÓN: Como todas las peticiones de usuario nos devuelven strings, para poder comprobar tanto el precio y el año tendremos que usar stof y stoi
+*/
 string checkprice(){
   string price;
   bool correcto=true;
@@ -295,7 +299,7 @@ string checkprice(){
     correcto=true;
     price="";
     price=userRequest(BOOK_PRICE_REQUEST);
-    if(price.length()==0){
+    if(price.length()==0 || stof(price)<=0){
         error(ERR_BOOK_PRICE);
         correcto=false;
     }else{
@@ -310,6 +314,10 @@ string checkprice(){
   }while(correcto==false);
   return price;
 }
+/*Función intermediaria que llama a todas las funciones para pedir los datos al usuario sobre un libro y coleccionarlo en una estructura de tipo Book
+  *PARÁMETROS: La tienda de libros que contiene los libros y será mas tarde modificada(paso por referencia)
+  *RETORNO: Estructura de tipo Book con los datos que el usuario ha introducido correctamente
+*/
 Book demandBook(BookStore &bookStore){
   Book book;
   string price;
@@ -325,10 +333,17 @@ Book demandBook(BookStore &bookStore){
   return book;
 
 }
+/*Función que añade al final del vector books de la tienda el libro introducido por el usuario(añade dinámicamente)
+  *PARÁMETROS: La tienda de libros en el que modificaremos su vector de libros(paso por referencia)
+  *RETORNO: Añade al final el libro introducido
+*/
 void addBook(BookStore &bookStore) {
 bookStore.books.push_back(demandBook(bookStore));
 }
-
+/*Función que borra un libro que el usuario quiera introduciendo su correpondiente id
+  *PARÁMETROS: Tienda de libros que modificaremos su vector de libros
+  *RETORNO: Borra el libro qu el usuario ha pedido
+*/
 void deleteBook(BookStore &bookStore) {
   string id;
   id=userRequest(BOOK_ID_REQUEST);
@@ -339,10 +354,15 @@ void deleteBook(BookStore &bookStore) {
       find=true;
     }
   }
-  if(find==false){
+  if(find==false){//Si el id del libro no existe...
     error(ERR_ID);
   }
 }
+/*Función que lee y traspasa los datos de un fichero a nuestra tienda
+  *PARÁMETROS: El nombre del fichero, un booleano que comprueba si tanto el titulo como los autores son correctos
+  *RETORNO: Añade al vector lo libros leidos por un archivo de texto
+  *ANOTACIÓN: Utilizamos un string "vacío" que nos quitará todos aquellos carácteres que no nos interesa para nuestro libro
+*/
 void load_CSV(string namefile,bool correct,BookStore &bookStore){
 fstream fichero(namefile,ios::in);
 Book book;
@@ -365,9 +385,9 @@ Book book;
         getline(fichero,price,'\n');
         book.price=stof(price);
         book.id=bookStore.nextId;
-        if(!fichero.eof() && checkCorrect(titulo,correct)==true && checkCorrect(titulo,correct)==true){
+        if(!fichero.eof() && checkCorrect(titulo,correct)==true && checkCorrect(autor,correct)==true){  //Mientras no ea final de fichero y sean correctos tanto titulo y autores...
           bookStore.books.push_back(book);
-          bookStore.nextId++;
+          bookStore.nextId++; //Al añadir un libro tendremos que aumentar el id del siguiente
         }
     }
      fichero.close();
@@ -376,15 +396,18 @@ Book book;
     error(ERR_FILE);
   }
 }
-
+/*Función que importa libros desde un archivo de texto pero desde el menu principal
+  PARÁMETROS: La tienda  que tendrá sus libros que añadiremos por fichero
+*/
 void importFromCsv(BookStore &bookStore){
   string namefile;
   bool correct=true;
   namefile=userRequest(FILENAME_REQUEST);
   load_CSV(namefile,correct,bookStore);
-  
 }
-
+/*Función que exporta lo libros desde el vector de la tienda a un fichero
+  *PARÁMETRO: La tienda que necesitaremos sus datos para exportarlos
+*/
 void exportToCsv(const BookStore &bookStore){
   string namefile;
   namefile=userRequest(FILENAME_REQUEST);
@@ -404,6 +427,10 @@ void exportToCsv(const BookStore &bookStore){
     error(ERR_FILE);
   }
 }
+/*Función que convierte de binario a libro
+  PARÁMETROS: Estructura de libro binaria
+  RETORNO: EStructura de libro
+*/
 Book binarytoBook(const BinBook &bookbin){
   Book book;
   book.id=bookbin.id;
@@ -414,6 +441,10 @@ Book binarytoBook(const BinBook &bookbin){
   book.price=bookbin.price;
   return book;
 }
+/*Función que lee un archivo binario
+  PARÁMETROS: El nombre del archivo, y la libreria
+  RETORNO: Añade los libros al vector
+*/
 void loadBin(string namefile,BookStore &bookStore){
   ifstream fichero;
   BinBookStore binbookstore;
@@ -435,18 +466,19 @@ void loadBin(string namefile,BookStore &bookStore){
       return;
     }
 }
+/*Función intermedia para importar desde un archivo binario que el usuario ha elegido en el menú
+  PARÁMETROS: La librería que más tarde añadiremos los libros
+*/
 void loadData(BookStore &bookStore){
-  bool repeat;
+  bool repeat;  //booleano que indica si la petición ha sido correcta y hay que repetir la instrucción
   do{
   repeat=false;
-  string erase_request=userRequest(ERASE_REQUEST);
+  string erase_request=userRequest(ERASE_REQUEST);  //Antes de añadir nada primero borraremos todos los datos que tenemos en la tienda
   if(erase_request.size()==1 && (erase_request=="Y" || erase_request=="y")){
     string namefile=userRequest(FILENAME_REQUEST);
     bookStore.books.clear();
     bookStore.nextId=1;
     loadBin(namefile,bookStore);
-    
-
   }
   else if(erase_request=="N" || erase_request=="n"){
     return;
@@ -456,6 +488,10 @@ void loadData(BookStore &bookStore){
   }
   }while(repeat==true);
 }
+/*Función que convierte de libro a binario
+  PARÁMETROS: Libro 
+  RETORNO: Libro en estructura binaria
+*/
 BinBook booktoBinary(const Book &book){
   BinBook binbook;
   binbook.id=book.id;
@@ -466,6 +502,9 @@ BinBook booktoBinary(const Book &book){
   binbook.price=book.price;
   return binbook;
 }
+/*Función que escribe en un fichero los datos de la tienda
+  *PARÁMETROS: Librería, el fichero que queremos escribir
+*/
 void writeBookStore(const BookStore &bookStore, ofstream &fichero){
   if(fichero.is_open()){
     BinBookStore binBookStore;
@@ -475,6 +514,9 @@ void writeBookStore(const BookStore &bookStore, ofstream &fichero){
   }
 
 }
+/*Función que escribe en un fichero binario los datos de un libro
+  *PARÁMETROS: Librería, el fichero binario que queremos escribir
+*/
 void writeBook(const BookStore &bookStore,ofstream &fichero){
   BinBook binbook;
   if(fichero.is_open()){
@@ -486,6 +528,9 @@ void writeBook(const BookStore &bookStore,ofstream &fichero){
     fichero.close();
   }
 }
+/*Función intermedia que escribe los datos en un fichero binario
+  PARÁMETROS: Librería
+*/
 void saveData(const BookStore &bookStore){
   ofstream fichero;
   string namefile=userRequest(FILENAME_REQUEST);
@@ -499,8 +544,10 @@ void saveData(const BookStore &bookStore){
     error(ERR_FILE);
   }
 }
+/*Función que gestiona el menú de importar/exportar y las opciones que el usuario elige
+  PARÁMETROS: Librería
+*/
 void importExportMenu(BookStore &bookStore) {
-  
   char option;
    do {
     showImportMenu();
@@ -529,13 +576,15 @@ void importExportMenu(BookStore &bookStore) {
         error(ERR_OPTION);
     }
   } while (option != 'b');
-
-  
 }
+/*Función que comprueba los argumentos (si los hay)para saber el orden y el tipo de importación de datos 
+  PARÁMETROS: Número de argumentos (contando el programa), los argumentos y la librería
+  RETORNO: Importacíon por fichero de texto o por fichero binario o solamente ejecución del programa
+*/
 void checkArguments(int argc,char *argv[],BookStore &bookStore){
   bool correct=true;
   Book book;
-  if(argc % 2 ==0 || argc>5){
+  if(argc % 2 ==0 || argc>5){//Si algun agumento del tipo "-i" o "-l" no tiene fichero correspondiente
     error(ERR_ARGS);
     exit(0);
   }else if(argc==3){
@@ -563,10 +612,7 @@ void checkArguments(int argc,char *argv[],BookStore &bookStore){
         exit(0);
       }
   }
-  
-
 }
-
 int main(int argc, char *argv[]) {
   BookStore bookStore;
   bookStore.name = "My Book Store";
